@@ -30,7 +30,6 @@ CONFIG = {
     },
 
     # --- CEVAP İÇİ REKLAMLAR ---
-    # Bu görselleri de değiştirmek isterseniz burayı düzenleyin
     "responses_ad": {
         "school": { 
             "image": "choco.png",
@@ -53,7 +52,7 @@ CONFIG = {
 }
 
 # ==============================================================================
-# 3. YARDIMCI FONKSİYONLAR (GIF DESTEKLİ)
+# 3. YARDIMCI FONKSİYONLAR
 # ==============================================================================
 def get_base64_of_bin_file(bin_file):
     try:
@@ -64,7 +63,7 @@ def get_base64_of_bin_file(bin_file):
         return None
 
 def get_mime_type(filename):
-    """Dosya uzantısına göre türü belirler (GIF için kritik)."""
+    """Dosya uzantısına göre türü belirler."""
     ext = filename.split('.')[-1].lower()
     if ext == 'gif': return 'image/gif'
     if ext == 'png': return 'image/png'
@@ -144,26 +143,32 @@ LOCALE = {
 }
 
 # ==============================================================================
-# 5. CSS TASARIM (SADE VE ŞIK)
+# 5. CSS TASARIM (SADE, ŞIK VE KOMPAKT)
 # ==============================================================================
 st.markdown("""
 <style>
-/* GENEL */
+/* GENEL VE RESET */
 .stApp { background-color: #0e1117; color:white; font-family: sans-serif; }
 
+/* --- KRİTİK: ÜST BOŞLUĞU KALDIRMA --- */
+.block-container {
+    padding-top: 1rem !important; /* Standart 6rem yerine 1rem */
+    padding-bottom: 5rem !important; /* Alttan biraz boşluk kalsın */
+}
+
 /* HEADER */
-.header { text-align:center; padding-top: 20px; padding-bottom: 10px; }
+.header { text-align:center; padding-top: 0px; padding-bottom: 10px; }
 .header h1 { font-size: 26px; font-weight: 800; margin: 0; color: white; }
 .header p { font-size: 13px; color: #888; margin-top: 5px; }
 
 /* KARŞILAMA */
-.welcome-container { text-align: center; padding: 50px 20px; animation: fadeIn 0.8s; }
+.welcome-container { text-align: center; padding: 20px 20px; animation: fadeIn 0.8s; }
 .welcome-title { font-size: 30px; font-weight: 800; color: #fff; margin-bottom: 10px; }
-.welcome-desc { font-size: 15px; color: #aaa; margin-bottom: 40px; }
-.welcome-icon { font-size: 60px; margin-bottom: 20px; display:block; }
+.welcome-desc { font-size: 15px; color: #aaa; margin-bottom: 30px; }
+.welcome-icon { font-size: 50px; margin-bottom: 15px; display:block; }
 
 /* BUTONLAR */
-.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
 .quick-btn {
     background: white; color: black; border: none; border-radius: 12px;
     padding: 15px 5px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;
@@ -194,7 +199,7 @@ div[data-testid="stTextInput"] input {
 .ad-label { display: block; font-size: 10px; color: #00b894; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
 .ad-img-internal { width: 100%; max-width: 250px; border-radius: 10px; }
 
-.ad-wrapper { margin-top: 40px; text-align: center; border-top: 1px solid #333; padding-top: 15px; }
+.ad-wrapper { margin-top: 30px; text-align: center; border-top: 1px solid #333; padding-top: 15px; }
 .ad-title { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
 .ad-img { width: 100%; max-width: 320px; border-radius: 12px; }
 </style>
@@ -262,148 +267,4 @@ class CampusLogic:
         return f"<div class='menu-card'><h3>{self.data['transport']['merkez']['name']}</h3><ul><li>⏱️: <b>{next_bus}</b></li></ul></div>"
 
     def calculate_grade(self, s):
-        total = (s[0]*0.30) + (s[1]*0.10) + (s[2]*0.10) + (s[3]*0.10) + (s[4]*0.40)
-        status = self.txt["res_pass"] if total >= 64.5 else self.txt["res_fail"]
-        return f"Ortalama: **{total:.2f}**\nDurum: **{status}**"
-
-    def detect_intent(self, text):
-        text = text.lower()
-        for intent, keywords in INTENT_LIB.items():
-            if any(k in text for k in keywords):
-                return intent
-        return None
-
-# ==============================================================================
-# 7. UYGULAMA AKIŞI
-# ==============================================================================
-
-# A) DİL SEÇİLMEMİŞSE
-if st.session_state.language is None:
-    st.markdown("<br><br>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class="welcome-container">
-        <span class="welcome-icon">🎓</span>
-        <div class="welcome-title">{LOCALE['tr']['welcome_title']}</div>
-        <div class="welcome-desc">{LOCALE['tr']['welcome_desc']}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        col_tr, col_en = st.columns(2)
-        with col_tr:
-            if st.button("🇹🇷 Türkçe", type="primary", use_container_width=True):
-                st.session_state.language = "tr"
-                st.query_params["lang"] = "tr"
-                st.rerun()
-        with col_en:
-            if st.button("🇬🇧 English", type="primary", use_container_width=True):
-                st.session_state.language = "en"
-                st.query_params["lang"] = "en"
-                st.rerun()
-
-# B) DİL SEÇİLMİŞSE
-else:
-    lang = st.session_state.language
-    txt = LOCALE[lang]
-    bot = CampusLogic(lang)
-
-    # HEADER & GREETING
-    st.markdown(f"""
-    <div class="header">
-      <h1>🎓 {txt['welcome_title']}</h1>
-      <p>{txt['welcome_desc']}</p>
-    </div>
-    <div class="greeting-text">{txt["greeting"]}</div>
-    """, unsafe_allow_html=True)
-
-    # HIZLI BUTONLAR
-    st.markdown(f"""
-    <form method="get">
-      <input type="hidden" name="lang" value="{lang}">
-      <div class="quick-grid">
-        <button class="quick-btn" name="q" value="school">{txt['btn_school']}</button>
-        <button class="quick-btn" name="q" value="dorm">{txt['btn_dorm']}</button>
-        <button class="quick-btn" name="q" value="bus">{txt['btn_bus']}</button>
-        <button class="quick-btn" name="q" value="grade">{txt['btn_grade']}</button>
-      </div>
-    </form>
-    """, unsafe_allow_html=True)
-
-    # SIDEBAR
-    with st.sidebar:
-        st.header(txt["sidebar_calc"])
-        if st.button("Change Lang / Dil Değiştir"):
-            st.session_state.language = None
-            st.query_params.clear()
-            st.rerun()
-        st.markdown("---")
-        with st.expander(txt["sidebar_calc"], expanded=True):
-            s1 = st.number_input("Vize %30", 0, 100)
-            s2 = st.number_input("Portfolyo %10", 0, 100)
-            s3 = st.number_input("Sınıf İçi %10", 0, 100)
-            s4 = st.number_input("Diğer %10", 0, 100)
-            s5 = st.number_input("Final %40", 0, 100)
-            if st.button(txt["btn_calc"], type="primary"):
-                st.success(bot.calculate_grade([s1, s2, s3, s4, s5]))
-        st.caption("📢 Sponsor: Kampüs Burger")
-
-    # MESAJ GEÇMİŞİ
-    if "history" not in st.session_state:
-        st.session_state.history = []
-
-    # 1. BUTON CEVAPLARI + CEVAP İÇİ REKLAM
-    q = st.query_params.get("q")
-    if q:
-        intent_map = {"bus": "transport", "grade": "grade", "school": "school", "dorm": "dorm"}
-        target_intent = intent_map.get(q, "default")
-        
-        ad_html = get_ad_html_for_intent(target_intent, lang)
-        
-        if q == "school": resp = bot.get_menu_html("school")
-        elif q == "dorm": resp = bot.get_menu_html("dorm")
-        elif q == "bus": resp = bot.get_bus_html()
-        else: resp = f"<div class='menu-card'><ul><li>{txt['calc_msg']}</li></ul></div>"
-        
-        full_resp = ad_html + resp
-        st.session_state.history.append({"role": "assistant", "content": full_resp})
-        st.query_params.clear()
-        st.rerun()
-
-    # 2. YAZARAK SOR CEVAPLARI
-    user_input = st.text_input("", placeholder=txt["input_placeholder"], key="mid_input")
-
-    if user_input:
-        intent = bot.detect_intent(user_input)
-        
-        ad_html = get_ad_html_for_intent(intent, lang) if intent else get_ad_html_for_intent("default", lang)
-
-        ans = ""
-        if intent == "school": ans = bot.get_menu_html("school")
-        elif intent == "dorm": ans = bot.get_menu_html("dorm")
-        elif intent == "transport": ans = bot.get_bus_html()
-        elif intent == "grade": ans = f"<div class='menu-card'><ul><li>{txt['calc_msg']}</li></ul></div>"
-        elif intent == "greet": ans = f"<div class='menu-card'><ul><li>{txt['greeting']}</li></ul></div>"
-        else: ans = f"<div class='menu-card'><ul><li>{txt['error_msg']}</li></ul></div>"
-        
-        full_ans = ad_html + ans if intent and intent != "greet" else ans
-        st.session_state.history.append({"role": "user", "content": user_input})
-        st.session_state.history.append({"role": "assistant", "content": full_ans})
-
-    # CEVAPLARI GÖSTER
-    for msg in reversed(st.session_state.history):
-        if msg["role"] == "assistant":
-            st.markdown(msg["content"], unsafe_allow_html=True)
-
-    # 3. FOOTER REKLAM (GIF)
-    footer_file = CONFIG["footer_ad"]["image"]
-    footer_img_b64 = get_base64_of_bin_file(footer_file)
-    if footer_img_b64:
-        # MIME Type (image/gif) otomatik algılanır
-        mime = get_mime_type(footer_file)
-        st.markdown(f"""
-        <div class="ad-wrapper">
-            <span class="ad-title">{CONFIG['footer_ad']['title'][lang]}</span>
-            <img src="data:{mime};base64,{footer_img_b64}" class="ad-img" alt="Main Sponsor">
-        </div>
-        """, unsafe_allow_html=True)
+        total = (s[0]*0.30) + (s[1]*0.10) + (s
