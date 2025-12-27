@@ -20,17 +20,17 @@ elif "language" not in st.session_state:
     st.session_state.language = None
 
 # ==============================================================================
-# 2. AYARLAR (REKLAM & VİDEO)
+# 2. AYARLAR
 # ==============================================================================
 CONFIG = {
-    # ARKA PLAN VİDEOSU (app.py ile aynı klasörde olmalı)
-    "bg_video": "",
-    
-    # REKLAM AYARLARI
+    # --- FOOTER REKLAM (GIF BURAYA GELİYOR) ---
     "footer_ad": {
-        "bg_file": "mcc.gif",
+        "image": "mcc.gif",  # Hareketli GIF dosyasının adı
         "title": {"tr": "✨ Ana Sponsor", "en": "✨ Main Sponsor"}
     },
+
+    # --- CEVAP İÇİ REKLAMLAR ---
+    # Bu görselleri de değiştirmek isterseniz burayı düzenleyin
     "responses_ad": {
         "school": { 
             "image": "choco.png",
@@ -53,7 +53,7 @@ CONFIG = {
 }
 
 # ==============================================================================
-# 3. YARDIMCI FONKSİYONLAR
+# 3. YARDIMCI FONKSİYONLAR (GIF DESTEKLİ)
 # ==============================================================================
 def get_base64_of_bin_file(bin_file):
     try:
@@ -63,58 +63,29 @@ def get_base64_of_bin_file(bin_file):
     except FileNotFoundError:
         return None
 
-def set_background_video(video_file):
-    """Videoyu okur ve arka plana yerleştirir."""
-    video_b64 = get_base64_of_bin_file(video_file)
-    if not video_b64:
-        # Video yoksa düz siyah yap
-        st.markdown(
-            """<style>.stApp { background: #000; }</style>""", 
-            unsafe_allow_html=True
-        )
-        return
-
-    # HTML/CSS: Video en altta, üstünde siyah perde, en üstte içerik
-    video_html = f"""
-    <style>
-    .stApp {{
-        background: rgba(0,0,0,0); /* Streamlit arka planını şeffaf yap */
-    }}
-    #my-video-container {{
-        position: fixed;
-        right: 0; 
-        bottom: 0;
-        min-width: 100%; 
-        min-height: 100%;
-        z-index: -2;
-    }}
-    #video-overlay {{
-        position: fixed;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.7); /* %70 Siyah Perde (Yazı okunurluğu için) */
-        z-index: -1;
-    }}
-    </style>
-    <video autoplay muted loop id="my-video-container">
-        <source src="data:video/mp4;base64,{video_b64}" type="video/mp4">
-    </video>
-    <div id="video-overlay"></div>
-    """
-    st.markdown(video_html, unsafe_allow_html=True)
+def get_mime_type(filename):
+    """Dosya uzantısına göre türü belirler (GIF için kritik)."""
+    ext = filename.split('.')[-1].lower()
+    if ext == 'gif': return 'image/gif'
+    if ext == 'png': return 'image/png'
+    if ext in ['jpg', 'jpeg']: return 'image/jpeg'
+    return 'image/png'
 
 def get_ad_html_for_intent(intent, lang):
     if not CONFIG["show_response_ad"]: return ""
     ad_data = CONFIG["responses_ad"].get(intent, CONFIG["responses_ad"]["default"])
-    img_b64 = get_base64_of_bin_file(ad_data["image"])
+    
+    file_name = ad_data["image"]
+    img_b64 = get_base64_of_bin_file(file_name)
     if not img_b64: return ""
+    
+    mime = get_mime_type(file_name)
     title_text = ad_data["title"][lang]
+    
     return f"""
     <div class="ad-card-internal">
         <span class="ad-label">{title_text}</span>
-        <img src="data:image/png;base64,{img_b64}" class="ad-img-internal">
+        <img src="data:{mime};base64,{img_b64}" class="ad-img-internal">
     </div>
     """
 
@@ -137,8 +108,8 @@ LOCALE = {
         "input_placeholder": "Bir şeyler yaz (Örn: 'Yemekhane', 'Ring')...",
         "btn_school": "🏫 Okul Menü",
         "btn_dorm": "🛏️ Yurt Menü",
-        "btn_bus": "🚌 Merkez Otobüs",
-        "btn_grade": "🧮 Not Hesaplam",
+        "btn_bus": "🚌 Merkez Oto",
+        "btn_grade": "🧮 Notlar",
         "menu_school": "🏫 Okul Menüsü",
         "menu_dorm_b": "🍳 Yurt Kahvaltı",
         "menu_dorm_d": "🍲 Yurt Akşam",
@@ -173,80 +144,59 @@ LOCALE = {
 }
 
 # ==============================================================================
-# 5. CSS TASARIM (ŞEFFAF KATMANLAR)
+# 5. CSS TASARIM (SADE VE ŞIK)
 # ==============================================================================
 st.markdown("""
 <style>
-/* FONT VE RENKLER */
-.stApp { color:white; font-family: sans-serif; }
+/* GENEL */
+.stApp { background-color: #0e1117; color:white; font-family: sans-serif; }
 
 /* HEADER */
-.header { text-align:center; padding-top: 10px; padding-bottom: 5px; }
-.header h1 { font-size: 24px; font-weight: 800; margin: 0; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-.header p { font-size: 12px; color: #ccc; margin-top: 5px; }
+.header { text-align:center; padding-top: 20px; padding-bottom: 10px; }
+.header h1 { font-size: 26px; font-weight: 800; margin: 0; color: white; }
+.header p { font-size: 13px; color: #888; margin-top: 5px; }
 
 /* KARŞILAMA */
-.welcome-container { text-align: center; padding: 50px 20px; animation: fadeIn 0.5s; }
-.welcome-title { font-size: 28px; font-weight: 800; color: #fff; margin-bottom: 10px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-.welcome-desc { font-size: 14px; color: #ddd; margin-bottom: 40px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
-.welcome-icon { font-size: 60px; margin-bottom: 20px; display:block; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.welcome-container { text-align: center; padding: 50px 20px; animation: fadeIn 0.8s; }
+.welcome-title { font-size: 30px; font-weight: 800; color: #fff; margin-bottom: 10px; }
+.welcome-desc { font-size: 15px; color: #aaa; margin-bottom: 40px; }
+.welcome-icon { font-size: 60px; margin-bottom: 20px; display:block; }
 
-/* BUTONLAR (YARI ŞEFFAF ARKA PLAN) */
-.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+/* BUTONLAR */
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
 .quick-btn {
-    background: rgba(255, 255, 255, 0.9); /* Hafif şeffaf beyaz */
-    color: black; border: none; border-radius: 12px;
-    padding: 15px 5px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%;
-    backdrop-filter: blur(5px);
+    background: white; color: black; border: none; border-radius: 12px;
+    padding: 15px 5px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;
+    transition: transform 0.1s;
 }
-.greeting-text { text-align: center; color: #eee; font-size: 14px; margin-bottom: 15px; font-weight: 500; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+.quick-btn:active { transform: scale(0.98); background: #eee; }
+.greeting-text { text-align: center; color: #ddd; font-size: 14px; margin-bottom: 15px; font-weight: 500; }
 
-/* KARTLAR (GLASSMORPHISM EFFECT) */
+/* KARTLAR */
 .menu-card { 
-    background: rgba(20, 20, 20, 0.85); /* Çok koyu yarı şeffaf */
-    border-left: 4px solid #00b894; 
-    border-radius: 8px; padding: 15px; margin-top: 15px; 
-    backdrop-filter: blur(10px);
+    background: #1e1e1e; border-left: 4px solid #00b894; border-radius: 8px; padding: 15px; margin-top: 15px; 
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
-.menu-card h3 { color: #00b894; font-size: 15px; margin: 0 0 10px 0; font-weight:bold; }
+.menu-card h3 { color: #00b894; font-size: 16px; margin: 0 0 10px 0; font-weight:bold; }
 .menu-card ul { padding: 0; margin: 0; list-style: none; }
-.menu-card li { border-bottom: 1px solid #444; padding: 5px 0; font-size: 13px; color: #ddd; }
+.menu-card li { border-bottom: 1px solid #333; padding: 6px 0; font-size: 14px; color: #ddd; }
 .menu-card li:last-child { border-bottom: none; }
 
-/* INPUT (YARI ŞEFFAF) */
-div[data-testid="stTextInput"] { margin-top: 10px; }
+/* INPUT (HAP ŞEKLİNDE) */
+div[data-testid="stTextInput"] { margin-top: 15px; }
 div[data-testid="stTextInput"] input {
-    background-color: rgba(30, 30, 30, 0.8) !important; 
-    color: white !important; border: 1px solid #555 !important;
-    border-radius: 50px !important; padding: 15px 20px !important; font-size: 14px;
-    backdrop-filter: blur(5px);
+    background-color: #1e1e1e !important; color: white !important; border: 1px solid #444 !important;
+    border-radius: 50px !important; padding: 15px 25px !important; font-size: 14px;
 }
 
-/* CEVAP İÇİ REKLAM */
-.ad-card-internal {
-    text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #555; padding-bottom: 10px;
-}
-.ad-label {
-    display: block; font-size: 10px; color: #00b894; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; text-shadow: 0 1px 2px rgba(0,0,0,1);
-}
+/* REKLAMLAR */
+.ad-card-internal { text-align: center; margin-bottom: 15px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+.ad-label { display: block; font-size: 10px; color: #00b894; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
 .ad-img-internal { width: 100%; max-width: 250px; border-radius: 10px; }
 
-/* FOOTER REKLAM */
-.ad-wrapper {
-    margin-top: 30px; text-align: center; border-top: 1px solid #555; padding-top: 10px;
-}
-.ad-title {
-    font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; text-shadow: 0 1px 2px rgba(0,0,0,1);
-}
-.ad-img {
-    width: 100%; max-width: 300px; border-radius: 15px; border: 2px solid transparent;
-    animation: glow 2s infinite alternate;
-}
-@keyframes glow {
-    0% { border-color: #444; box-shadow: 0 0 5px rgba(255, 255, 255, 0.1); }
-    100% { border-color: #fff; box-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
-}
+.ad-wrapper { margin-top: 40px; text-align: center; border-top: 1px solid #333; padding-top: 15px; }
+.ad-title { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; display: block; }
+.ad-img { width: 100%; max-width: 320px; border-radius: 12px; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -326,9 +276,6 @@ class CampusLogic:
 # ==============================================================================
 # 7. UYGULAMA AKIŞI
 # ==============================================================================
-
-# VİDEO YÜKLE
-set_background_video(CONFIG["bg_video"])
 
 # A) DİL SEÇİLMEMİŞSE
 if st.session_state.language is None:
@@ -448,13 +395,15 @@ else:
         if msg["role"] == "assistant":
             st.markdown(msg["content"], unsafe_allow_html=True)
 
-    # 3. FOOTER REKLAM
-    footer_img_b64 = get_base64_of_bin_file(CONFIG["footer_ad"]["image"])
+    # 3. FOOTER REKLAM (GIF)
+    footer_file = CONFIG["footer_ad"]["image"]
+    footer_img_b64 = get_base64_of_bin_file(footer_file)
     if footer_img_b64:
+        # MIME Type (image/gif) otomatik algılanır
+        mime = get_mime_type(footer_file)
         st.markdown(f"""
         <div class="ad-wrapper">
             <span class="ad-title">{CONFIG['footer_ad']['title'][lang]}</span>
-            <img src="data:image/png;base64,{footer_img_b64}" class="ad-img" alt="Main Sponsor">
+            <img src="data:{mime};base64,{footer_img_b64}" class="ad-img" alt="Main Sponsor">
         </div>
-
         """, unsafe_allow_html=True)
