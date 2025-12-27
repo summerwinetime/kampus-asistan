@@ -28,7 +28,7 @@ CONFIG = {
     
     # REKLAM AYARLARI
     "footer_ad": {
-        "image": "mcc.gif",
+        "bg_file": "mcc.gif",
         "title": {"tr": "✨ Ana Sponsor", "en": "✨ Main Sponsor"}
     },
     "responses_ad": {
@@ -456,4 +456,5 @@ else:
             <span class="ad-title">{CONFIG['footer_ad']['title'][lang]}</span>
             <img src="data:image/png;base64,{footer_img_b64}" class="ad-img" alt="Main Sponsor">
         </div>
+
         """, unsafe_allow_html=True)
